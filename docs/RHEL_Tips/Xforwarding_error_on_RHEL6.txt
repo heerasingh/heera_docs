@@ -1,0 +1,46 @@
+
+
+X11 forwarding request with "ssh -X" or "ssh -Y" fails on RHEL 5 and RHEL 6:
+============================================================================
+
+
+
+Issue:
+======
+X11 forwarding with ssh -X or ssh -Y fails with
+	X11 forwarding request failed on channel 0
+
+
+Resolution:
+===========
+Modify "/etc/ssh/sshd_config" and set "AddressFamily inet" and restart sshd
+
+
+
+Root Cause:
+===========
+By default sshd uses "AddressFamily all", this can sometimes cause ssh forwarding to use IPV6 instead of IPV4.
+
+
+
+
+Diagnostic Steps:
+=================
+
+On the server run:
+# sshd -d -p <port> 
+
+Connect to the server from the client
+# ssh -X -p <port> <server address>
+
+Additional sshd process information can be saved by running strace on the sshd parent process before the client connects
+# strace -f -ff -o <outfile prefix> -p <pid of sshd parent process>
+
+
+
+
+
+
+
+
+
