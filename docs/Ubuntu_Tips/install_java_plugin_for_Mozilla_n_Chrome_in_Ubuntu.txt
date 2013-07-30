@@ -1,5 +1,5 @@
 
-1. Check install Java version:
+1. Check installed Java version:
 # java -version
 
 
