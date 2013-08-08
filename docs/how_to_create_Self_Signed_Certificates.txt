@@ -1,0 +1,60 @@
+
+
+SELF SIGNED CERTIFICATE CREATION STEPS:
+=======================================
+
+###############################################################################################################################
+3 Step Process:
+===============
+Step 1. 
+Generation of RSA Private Key. (Superceded by genpkey.):
+# openssl genrsa -out /etc/csync2_ssl_key.pem 1024
+
+Step 2. 
+Generate certificate signing request:
+# openssl req -new -key /etc/csync2_ssl_key.pem -out /etc/csync2_ssl_cert.csr
+
+Step 3. 
+Sign/create the certificate:
+# openssl x509 -req -days 600 -in /etc/csync2_ssl_cert.csr -signkey /etc/csync2_ssl_key.pem -out /etc/csync2_ssl_cert.pem
+###############################################################################################################################
+
+
+
+
+
+###############################################################################################################################
+2 Step Process (ala Google):
+============================
+Step 1. 
+Create private key:
+# openssl genrsa -out rsaprivkey.pem 1024
+
+Step 2. 
+Create the certificate:
+# openssl req -new -x509 -key rsaprivkey.pem -out rsacert.pem
+###############################################################################################################################
+
+
+
+
+
+###############################################################################################################################
+1 step process:
+===============
+# openssl req -new -x509 -nodes -out /etc/ssl/certs/rhel6vm.crt -keyout /etc/ssl/certs/rhel6vm.key -days 365
+###############################################################################################################################
+
+
+
+
+
+
+
+
+Reference:
+http://www.rainingpackets.com/wiki/doku.php?id=generating_ssl_certificates
+
+
+
+
