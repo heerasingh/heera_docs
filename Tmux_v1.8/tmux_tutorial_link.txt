@@ -1,0 +1,25 @@
+
+
+https://mutelight.org/practical-tmux
+http://robots.thoughtbot.com/post/2166174647/love-hate-tmux
+http://robots.thoughtbot.com/post/2641409235/a-tmux-crash-course
+
+
+Using tmux locally and SSHing into a remote: 
+"Avoiding the 'screen-256color': unknown terminal type."
+
+=======================================================
+simply set an alias in your .zshrc/.bashrc:
+
+alias ssh='TERM=xterm ssh'
+=======================================================
+
+
+
+
+Reference:
+https://coderwall.com/p/ftuwdq
+
+
+
+
