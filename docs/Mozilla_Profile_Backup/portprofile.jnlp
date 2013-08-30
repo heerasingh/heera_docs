@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jnlp spec="1.0+" codebase="http://portprofile.googlecode.com/svn/branches/version1.0/">
+
+<information>
+  <title>Portprofile</title>
+  <vendor>Forteresce Valor</vendor>
+  <homepage href="http://portprofile.googlecode.com/" />
+  <description>An app designed to help porting firefox profiles amongst different systems</description>
+  <icon href="config/portprofile_icon_transparent_32x32.ico"/>
+  <icon kind="splash" href="config/portprofile_icon_transparent_128x128.png"/>
+  <offline-allowed/> 
+  <shortcut>
+      <desktop/>
+      <menu/>
+  </shortcut>
+</information>
+
+<security>
+  <all-permissions/>
+</security>
+
+<resources>
+  <j2se version="1.6+" />
+  <jar href="dist/portprofile.jar"/>
+</resources>
+
+<application-desc main-class="forteresce.portprofile.PortProfileGUI" />
+
+</jnlp>
