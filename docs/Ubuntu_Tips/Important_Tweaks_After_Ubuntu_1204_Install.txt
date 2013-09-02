@@ -1,0 +1,113 @@
+
+Tweaks After Ubuntu 12.04 Install:
+=================================
+
+
+
+
+1. Enable Hibernate Option:
+# vim /var/lib/polkit-1/localauthority/50-local.d/hibernate.pkla
+-----------------------------------------------------
+[Re-enable Hibernate]
+Identity=unix-user:*
+Action=org.freedesktop.upower.hibernate
+ResultActive=yes
+-----------------------------------------------------
+
+
+2: Install Gnome-Advance-Settings-tool: 
+# apt-get install gnome-tweak-tool
+
+
+3: Install Ubuntu Tweak:
+# add-apt-repository ppa:tualatrix/ppa
+# apt-get update
+# apt-get install ubuntu-tweak
+
+
+4: Move Minimize, Maximize, Close Buttons to Right:
+# apt-get install gconf-editor
+# gconf-editor
+
+Now Go to the following: 'apps' -> 'metacity' -> 'general' Find the "button_layout" parameter,
+Right mouse click, and select Edit Key.
+Change the value to the following: menu:minimize,maximize,close then Press Enter.
+
+
+
+5: Install CCSM(Compiz Config Setting Manager): 
+# apt-get install compizconfig-settings-manager
+
+
+6: Install Adobe Flash Plugin and Adobe Reader:
+# apt-add-repository "deb http://archive.canonical.com/ $(lsb_release -sc) partner"
+# apt-get update && sudo apt-get install flashplugin-installer acroread
+
+
+7: Install Gnome Shell 3.4: 
+# apt-get update
+# apt-get install gnome-shell gnome-tweak-tool
+
+
+8: Install Restricted Extras: 
+There are some Restricted extras in Ubuntu which is not install by default but you can install these Restricted extras by yourself. Restricted mp3 playback and decoding, support for various formats, fonts, java, flash plugin, lame, dvd playback. 
+# apt-get install ubuntu-restricted-extras
+
+
+
+9: Install Codecs: 
+# apt-get install libxine1-ffmpeg gxine mencoder totem-mozilla icedax tagtool easytag id3tool lame nautilus-script-audio-convert libmad0 mpg321
+
+
+
+10: Install Y-PPA manager on Ubuntu/Mint:
+Y-PPA-Manager Used for take backup of APT repositories.
+# add-apt-repository ppa:webupd8team/y-ppa-manager
+# apt-get update
+# apt-get install y-ppa-manager
+
+
+11: Install Mozilla Firefox profile backup tool:
+An app designed to help transferring firefox profiles amongst different systems.
+URL: https://code.google.com/p/portprofile/downloads/list
+File "portprofile.jnlp", Java required to run this tool.
+
+
+12: Install Old Gnome Look, if you dont want Unity:
+# apt-get install gnome-panel gnome-session-fallback
+After installation Logout and goback to Login Screen and click on "Ubuntu" Icon and select "Gnome Classic".
+
+
+13: Install Grub-Customizer:
+# add-apt-repository ppa:danielrichter2007/grub-customizer
+# apt-get update
+# apt-get install grub-customizer
+
+
+14: Display Hidden Startup Applications in ubuntu 12.04 and Above:
+# sed -i 's/NoDisplay=true/NoDisplay=false/g' /etc/xdg/autostart/*.desktop
+
+
+15: Remove MySQL from Ubuntu startup: 
+If you want to remove mysql from your system startup "rcconf" or "sysv-rc-conf" can't disable it because of the "SysV init" approach.
+Here is how to do it:
+Comment out the whole start on entry. This should look like the following:
+# vim /etc/init/mysql.conf
+-----------------------------------------
+#start on (net-device-up
+#          and local-filesystems
+#         and runlevel [2345])
+-----------------------------------------
+This method also works with other services.
+
+
+
+
+
+Reference:
+http://www.noobslab.com/2012/04/important-things-to-do-after-install_26.html
+http://www.techsupportalert.com/content/tips-and-tricks-ubuntu-after-installation-ubuntu-1204.htm
+http://www.techdrivein.com/2012/06/25-things-i-did-after-installing-ubuntu.html
+
+
+
