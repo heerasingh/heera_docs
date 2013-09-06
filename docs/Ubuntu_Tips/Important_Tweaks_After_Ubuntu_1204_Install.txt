@@ -101,6 +101,10 @@ Comment out the whole start on entry. This should look like the following:
 This method also works with other services.
 
 
+16: To disable local resolver in Ubuntu 12.04:
+To turn off dnsmasq in Network Manager, edit "/etc/NetworkManager/NetworkManager.conf" and comment the "dns=dnsmasq" line then do a "sudo restart network-manager".
+
+
 
 
 
