@@ -1,0 +1,96 @@
+
+
+Configuring DKIM Authentication in Zimbra:
+==========================================
+
+
+Configuring Zimbra 8.x to use DKIM Authentication for domain 'MYDOMAIN.COM'
+
+Step 1:
+Login into Zimbra server using SSH:
+# ssh root@ZIMBRA.MYDOMAIN.COM
+# su - zimbra
+
+
+
+Step 2:
+Creating the DKIM keys for a domain:
+# /opt/zimbra/libexec/zmdkimkeyutil -a -d MYDOMAIN.COM
+
+Example of result:
+50F0EEFE-AB8C-11E2-B7AE-FC2CE654A0ED._domainkey	IN	TXT	( "v=DKIM1; k=rsa; "
+"p=MIGfMA0GCSqGSIb3DQEBAQUCA4GNADCBiQKBgQDodIcoFWJsfsSzsdINY/ZiOKn3qKLt+qmEl1cDYApi0PCHwQmqTl9mhRKs3obfgN8O9nT227CDg9NI7MMu8r0fOatQRQ1YHesDmHIo1lELioDNd5QZPg1AUum0CPsDuR+YI5AG5wZhZ4c3ei0Uv3cu4aTIhGrRgnD081sysJ5vZwIDAQAB" )  ; ----- DKIM key 50F0EEFE-AB8C-11E2-B7AE-FC2CE654A0ED for MYDOMAIN.COM
+
+IMPORTANT: Enter the above result as TXT field in the DNS of example.com domain.
+
+
+
+Step 3:
+Testing the DKIM keys:
+Command syntax:
+# /opt/zimbra/opendkim/sbin/opendkim-testkey -d EXAMPLE.COM -s 0E9F184A-9577-11E1-AD0E-2A2FBBAC6BCB -x /opt/zimbra/conf/opendkim.conf 
+
+-d is the domain name (EXAMPLE.COM)
+-s is the selector name (0E9F184A-9577-11E1-AD0E-2A2FBBAC6BCB…value entered in first field of TXT record)
+-x is the configuration file (/opt/zimbra/conf/opendkim.conf)
+
+
+
+Step 4:
+Example of DNS TXT record:
+0E9F184A-9577-11E1-AD0E-2A2FBBAC6BCB._domainkey IN TXT "v=DKIM1; k=rsa; " "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC2R............."
+
+
+
+Step 5:
+Example of key test command:
+# /opt/zimbra/opendkim/sbin/opendkim-testkey -d EXAMPLE.COM -s 0E9F184A-9577-11E1-AD0E-2A2FBBAC6BCB -x /opt/zimbra/conf/opendkim.conf
+
+- If no result is shown: then the Key is correct.
+- If something is wrong then the following similar message would show up:
+opendkim-testkey: '0E9F184A-9577-11E1-AD0E-2A2FBBAC6BCB._domainkey.EXAMPLE.COM' record not found
+
+
+
+Step 6:
+Retrieving a DKIM key from Zimbra:
+# /opt/zimbra/libexec/zmdkimkeyutil -q -d EXAMPLE.COM
+
+
+
+Step 7:
+Deleting a DKIM key from Zimbra:
+/opt/zimbra/libexec/zmdkimkeyutil -r -d EXAMPLE.COM
+
+
+
+Step 8:
+Example of a mail headers sent using DKIM and SPF Authentication
+Received: from ZIMBRA.EXAMPLE.COM ([84.200.75.211])
+        by mx.google.com with ESMTPS id fv8si9645396bkc.151.2013.04.22.14.24.39
+        (version=TLSv1.2 cipher=ECDHE-RSA-RC4-SHA bits=128/128);
+        Mon, 22 Apr 2013 14:24:39 -0700 (PDT)
+Received-SPF: pass (google.com: domain of michel@EXAMPLE.COM designates 84.200.75.211 as permitted sender) client-ip=84.200.75.211;
+Authentication-Results: mx.google.com;
+       spf=pass (google.com: domain of michel@EXAMPLE.COM designates 84.200.75.211 as permitted sender) smtp.mail=michel@EXAMPLE.COM;
+       dkim=pass header.i=@EXAMPLE.COM
+DKIM-Filter: OpenDKIM Filter v2.7.1 ZIMBRA.EXAMPLE.COM 37BCE8CAFC
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=EXAMPLE.COM;
+	s=50F0EEFE-AB8C-11E2-B7AE-FC2CE654A0ED; t=1366665881;
+	bh=vJ74cUsPMKlw/MROSXLmZbSV7uGHNQFAGzPZcMjnQPU=;
+	h=Date:From:To:Message-ID:Subject:MIME-Version:Content-Type;
+	b=w6XTCY+nnfc/jZCtfA4QO7yIMLX9P6Bzlm+r5BGUUwdFTDtLb0CmrE8eYi+8mLDuR
+	M3wrGuOfo5U239h4ixp6nnc1Ogj5xb3uIfe9xVOQaXBeIz7yKDFWBiUaMT7FQEqpgU
+	aGBJ96p8bsxwyuU1L3/uSdyyykHPUapGNoTpH/R0=
+
+
+
+
+
+
+Reference:
+http://tipstricks.itmatrix.eu/?p=1587
+
+
+
+
