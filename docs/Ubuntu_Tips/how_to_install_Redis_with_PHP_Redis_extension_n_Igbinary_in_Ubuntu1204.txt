@@ -1,0 +1,119 @@
+
+Installing Redis + Php Redis Extension + igbinary in Ubuntu 12.04
+=================================================================
+
+
+Step 1:
+Install Redis server:
+Because the official Ubuntu PPA is not updated with the latest version of Redis, we need to add another repository:
+$ sudo add-apt-repository ppa:chris-lea/redis-server
+$ sudo apt-get update
+$ sudo apt-get install redis-server
+
+If "add-apt-repository" fails, try to run this first:
+$ sudo apt-get install python-software-properties
+
+
+
+Step 2:
+Install igbinary:
+$ sudo pecl install igbinary
+
+
+
+Step 3:
+Install PHP Redis extension:
+$ cd
+$ git clone https://github.com/nicolasff/phpredis.git
+$ cd phpredis
+$ phpize
+$ ./configure --enable-redis-igbinary
+$ sudo su
+$ make && make install
+
+
+Step 4:
+Start redis-server service:
+$ sudo service redis-server start
+
+
+
+Step 5:
+Create file "redis.ini":
+$ sudo vim /etc/php5/conf.d/redis.ini 
+-----------------------------------------
+extension=redis.so
+-----------------------------------------
+
+
+
+Step 6:
+Now test redis server:
+$ vim testredis1.php
+-----------------------------------------
+<?php
+$redis = new Redis();
+$redis->connect('127.0.0.1', 6379);
+if($redis->exists('key')) {
+  $redis->set('key', 'value');
+}
+$redis->get('key');
+?>
+-----------------------------------------
+
+OR
+
+$ vim testredis2.php
+-----------------------------------------
+<?php
+  // phpredis_set.php
+     $redis=new Redis() or die("Can't load redis module.");
+     $redis->connect('127.0.0.1');
+     $redis->set('set_testkey', 1);
+-----------------------------------------
+
+
+$ php testredis.php
+OR
+$ php testredis2.php
+
+Note: If nothing display in screen then your installation is successfuly done.
+
+There is a repository that has the php redis helper: https://github.com/ukko/phpredis-phpdoc
+
+
+
+Step 7:
+Restart Apache service:
+$ sudo service apache2 restart
+
+
+
+Step 8:
+Now check loaded modules:
+If you create a php file with the "phpinfo();" you will see something like:
+-----------------------------------------
+redis
+Redis Support	enabled
+Redis Version 	2.2.2
+
+Registered save handlers 	files user redis 
+-----------------------------------------
+
+
+
+
+
+
+
+Reference:
+http://www.calinrada.com/installing-redis-php-redis-extension-igbinary-in-ubuntu-12-04/
+*http://bookofzeus.com/articles/install-redis-on-ubuntu-with-php
+http://www.magentocommerce.com/boards/viewthread/278526/
+http://magentoexpertforum.com/showthread.php/10317-Install-Redis-Server-and-PHP-Redis-on-Ubuntu-Server
+Redis-server with Monit configuration:: http://darktalker.com/2011/install-redis-server-ubuntu/ 
+http://ricochen.wordpress.com/2012/03/25/install-phpredis-on-ubuntu/
+
+** http://websightdesigns.com/wiki/Setting_up_Ubuntu_Server_12.04
+
+
