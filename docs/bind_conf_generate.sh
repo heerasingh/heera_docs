@@ -1,9 +1,4 @@
 #!/bin/bash
-#####################################################
-### Generate BIND Configuration Using This Script ###
-#####################################################
-
-
 #http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
 #http://dl.fedoraproject.org/pub/epel/5/x86_64/epel-release-5-4.noarch.rpm
 
@@ -142,5 +137,12 @@ cat > /tmp/named_/$DomainName.rev << EOF
 `ip r | grep 'proto kernel' | awk '{print $9}' | awk -F'.' '{print $4}'`	IN      PTR     `hostname`.
 
 EOF
+
+
+echo '';
+echo 'Your BIND configuration generated in "/tmp/named_"';
+echo '';
+echo '';
+
 
 
