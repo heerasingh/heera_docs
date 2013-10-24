@@ -80,8 +80,8 @@ options {
 	# allow-transfer { localhost; $Network; };
 	recursion yes;
 
-	dnssec-enable yes;
-	dnssec-validation yes;
+	dnssec-enable no;
+	dnssec-validation no;
 	dnssec-lookaside auto;
 
 	/* Path to ISC DLV key */
@@ -152,7 +152,7 @@ cat > /var/named/chroot/var/named/$DomainName.zone << EOF
 `hostname | awk -F'.' '{print $1}'`			IN      A       $IP
 ns			IN      A       $IP
 ;	Define CNAME
-mail				CNAME	$IP
+mail				CNAME	`hostname`
 ;	Define SPF record
 $DomainName.	IN	TXT	"v=spf1 mx mx:`hostname` -all"
 ;	Define DKIM Key
