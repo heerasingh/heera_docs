@@ -207,7 +207,7 @@ if [ -f /etc/redhat-release ]; then
 	grep "CentOS release 6" /etc/redhat-release > /dev/null 2>&1
 	# Treat CentOS as RHEL
 	if [ $? = 0 ]; then
-		echo "Operating System:  RHEL6${i}"
+		echo "Operating System:  CentOS6${i}"
 		sleep 1
 		echo ""
 		RHEL6
