@@ -299,12 +299,13 @@ options {
         statistics-file "/var/named/data/named_stats.txt";
         memstatistics-file "/var/named/data/named_mem_stats.txt";
 	allow-query     { localhost; $Network; };
+	allow-query-cache     { localhost; $Network; };
 	#### transfer range ( set it if you have secondary DNS )
 	# allow-transfer { localhost; $Network; };
 	recursion yes;
 
-	dnssec-enable no;
-	dnssec-validation no;
+	dnssec-enable yes;
+	dnssec-validation yes;
 	dnssec-lookaside auto;
 
 	/* Path to ISC DLV key */
