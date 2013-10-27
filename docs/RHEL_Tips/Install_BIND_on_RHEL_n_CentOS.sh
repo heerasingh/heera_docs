@@ -376,7 +376,7 @@ cat > /var/named/chroot/var/named/$DomainName.zone << EOF
 `hostname | awk -F'.' '{print $1}'`			IN      A       $IP
 ns			IN      A       $IP
 ;	Define CNAME
-mail				CNAME	`hostname`
+mail				CNAME	`hostname | awk -F'.' '{print $1}'`
 ;	Define SPF record
 $DomainName.	IN	TXT	"v=spf1 mx mx:`hostname` -all"
 ;	Define DKIM Key
