@@ -304,8 +304,8 @@ options {
 	# allow-transfer { localhost; $Network; };
 	recursion yes;
 
-	dnssec-enable yes;
-	dnssec-validation yes;
+	dnssec-enable no;
+	dnssec-validation no;
 	dnssec-lookaside auto;
 
 	/* Path to ISC DLV key */
