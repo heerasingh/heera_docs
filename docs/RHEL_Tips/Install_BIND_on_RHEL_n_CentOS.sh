@@ -246,10 +246,23 @@ sleep 1
 #exit 0
 
 #yum install bind bind-chroot bind-utils -y
-yum install bind bind-chroot bind-utils bind-libs -y   > /dev/null 2>&1
+yum install bind bind-chroot bind-utils bind-libs ntp ntpdate -y   > /dev/null 2>&1
+
 
 # Configure Bind auto start at boot:
 chkconfig named on
+
+
+# Configure System Date and sync with NTP Server:
+/usr/sbin/ntpdate -u 123.108.200.163	> /dev/null 2>&1
+hwclock -w
+
+cat > /var/spool/cron/root << EOF
+* * * * * /usr/sbin/ntpdate -u 123.108.200.163 >> /tmp/ntpupdate 2>&1
+EOF
+
+chmod 600 /var/spool/cron/root
+
 
 # Stop Bind service, if service is already running:
 service named stop	> /dev/null 2>&1
@@ -439,6 +452,118 @@ echo '##        > exit                                          ##';
 echo '##                                                        ##';
 echo '##        c. Test and verify using dig command :          ##';
 echo '##        dig example.com                                 ##';
+echo '##                                                        ##';
+echo '##                                                        ##';
+echo '## 	Troubleshooting Steps saved in below path:      ##';
+echo '##	Path: "/root/My_BIND_Troubleshooting_Steps.txt" ##';
+cat > /root/My_BIND_Troubleshooting_Steps.txt << EOF
+My Own Troubleshooting Steps:
+=============================
+Option 1:
+Set "dnssec-validation auto" in named.conf
+-------------------------------------
+dnssec-validation auto;
+--------------------------------
+
+
+Option 2:
+Disable "dnssec" in named.conf
+-------------------------------------
+dnssec-enable no;
+dnssec-validation no;
+--------------------------------
+
+
+
+
+
+
+REFERENCE:
+***************************************************************************************************************************************
+
+Current Root/DLV Trust Anchors (bind.keys)
+==========================================
+
+Where can I find the most current copy?
+The most current copies of the bind.keys file can be found on our ftp site:
+    BIND 9.6.x bind.keys file	[URL: http://ftp.isc.org/isc/bind9/keys/9.6]
+    BIND 9.7.x bind.keys file	[URL: http://ftp.isc.org/isc/bind9/keys/9.7]
+    BIND9.8.x and BIND 9.9.x bind.keys file	[URL: http://ftp.isc.org/isc/bind9/keys/9.8]
+
+
+How is the bind.keys file used?
+When named starts, it needs certain information before it can respond to recursive queries, such as how to reach the root servers. If named is configured to do DNSSEC validation, it also needs to have starting trust anchors. While all of this information is configurable via the named.conf file, ISC has tried to make the configuration files simpler by compiling in this information so that it doesn’t have to be set in the named.conf file.
+For root hints (initial priming of root servers), BIND 9 has had this for years. If you don’t put a hints file in named.conf, named will use the compiled in hints.
+However, configuring trust anchors for DNSSEC validation has required added trusted-keys statements explicitly into the named.conf file. ISC now has a bind.keys file that contains the root key and the DLV key.
+For BIND 9.8 and 9.9:
+
+    If you configure your own managed-keys statement in named.conf, this will take precedence.
+    If you put “dnssec-validation auto” in named.conf, named will read the root key from bind.keys the first time it executes.
+    If you put “dnssec-lookaside auto” in named.conf, named will read the DLV key from bind.keys the first time it executes.
+    If you don’t have anything in named.conf and there is no bind.keys file, named will use the compiled in keys.
+
+Note: these are managed keys, so this is only applies the first time you execute named. Assuming that the keys are not already expired (in which case named will log that the key is expired and validation will not work), named will use RFC 5011 to detect new keys and automatically roll and maintain keys. Once named is managing the keys, the current keys will be in managed-keys.bind or *.mkeys, if you use views.
+For BIND 9.7:
+
+    If you configure your own managed-keys statement in named.conf, this will take precedence.
+    For DLV/dnssec-lookaside, 9.7 works just as 9.8 does.
+    For dnssec-validation, there is no “auto” option. However, if you put a managed-keys statement in named.conf, 9.7 will do the same RFC 5011 key maintenance as in 9.8.
+
+For BIND 9.6:
+9.6 does not have any form of automated management of keys. All trusted anchors are configured via a trusted-keys statement. There is a bind.keys file included in the distribution but you should just use it as an example and cut/paste the secrets for DLV/root into your named.conf file.
+
+
+
+Reference:
+https://www.isc.org/downloads/bind/bind-keys/
+
+
+################################################################################################################################
+
+
+
+Bind/Named: troubleshooting issues
+==================================
+
+Issue::	No DNS lookups for external domains anymore, resolving internal domains works correctly
+Error:: "(network unreachable) resolving 'dlv.isc.org/DNSKEY/IN"
+Solution:: check the current date and time on the server and adjust it.
+
+Issue: DNS requests for FQDN's outside of my LAN are not resolved anymore.
+Error:
+----------------------------------------------------------------------------------------------------------------------------------------
+Jun 16 18:41:11 alpedhuez named[13832]: validating @0x7f32c43d00a0: . NS: got insecure response; parent indicates it should be secure
+Jun 16 18:41:11 alpedhuez named[13832]: error (insecurity proof failed) resolving './NS/IN': 10.0.1.254#53
+Jun 16 18:41:11 alpedhuez named[13832]: managed-keys-zone ./IN: No DNSKEY RRSIGs found for 'dlv.isc.org': success
+Jun 16 18:41:11 alpedhuez named[13832]: managed-keys-zone ./IN: No DNSKEY RRSIGs found for '.': success
+Jun 16 18:41:11 alpedhuez named[13832]: /var/named/dynamic/managed-keys.bind.jnl: create: file not found
+Jun 16 18:41:11 alpedhuez named[13832]: managed-keys-zone ./IN: keyfetch_done:dns_journal_open -> unexpected error
+Jun 16 18:41:11 alpedhuez named[13832]: validating @0x7f32c43cd070: . NS: no valid signature found
+Jun 16 18:41:11 alpedhuez named[13832]: error (no valid RRSIG) resolving './NS/IN': 192.58.128.30#53
+Jun 16 18:41:11 alpedhuez named[13832]: validating @0x7f32c43cd070: . NS: no valid signature found
+Jun 16 18:41:13 alpedhuez named[13832]: error (no valid RRSIG) resolving './NS/IN': 192.203.230.10#53
+Jun 16 18:41:14 alpedhuez named[13832]: error (network unreachable) resolving './NS/IN': 2001:dc3::35#53
+...
+Jun 16 18:41:13 alpedhuez named[13832]: validating @0x7f32c43cd070: . NS: no valid signature found
+Jun 16 18:41:13 alpedhuez named[13832]: error (no valid RRSIG) resolving './NS/IN': 192.203.230.10#53
+Jun 16 18:41:14 alpedhuez named[13832]: error (network unreachable) resolving './NS/IN': 2001:dc3::35#53
+Jun 16 18:41:14 alpedhuez named[13832]: error (network unreachable) resolving './NS/IN': 2001:7fd::1#53
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Solution:
+I don't konw the solution, but I do know it is related to dnssec. I disabled dnssec in my named.conf as a workaround:
+dnssec-validation no;
+
+
+
+
+Reference:
+http://www.r71.nl/kb/304-bindnamed-troubleshooting-issues
+
+***************************************************************************************************************************************
+EOF
+
+echo '##                                                        ##';
 echo '############################################################';
 echo '';
 echo 'If You Have Any Doubt Then Contact Me at "heerakoranga@gmail.com"';
@@ -457,6 +582,7 @@ while true;
                 * ) echo "Please answer yes or no.";;
                 esac
 	done
+
 
 
 
