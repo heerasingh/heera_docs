@@ -454,8 +454,8 @@ echo '##        c. Test and verify using dig command :          ##';
 echo '##        dig example.com                                 ##';
 echo '##                                                        ##';
 echo '##                                                        ##';
-echo '## 	Troubleshooting Steps saved in below path:      ##';
-echo '##	Path: "/root/My_BIND_Troubleshooting_Steps.txt" ##';
+echo '##        Troubleshooting Steps saved in below path:      ##';
+echo '##        Path: "/root/My_BIND_Troubleshooting_Steps.txt" ##';
 cat > /root/My_BIND_Troubleshooting_Steps.txt << EOF
 My Own Troubleshooting Steps:
 =============================
