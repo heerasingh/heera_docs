@@ -1,4 +1,7 @@
 
+Find Blobs with Inode Number in Zimbra:
+=======================================
+
 
 1).  Find files which are having same inode number with number of occurance.  
 
@@ -12,4 +15,5 @@ find /opt/zimbra/store/0/ -inum "1321889"
 
 
 find /opt/zimbra/store/0/ -name "*.msg"  | xargs ls -li --full-time | awk '{ print "Inode Number = " $1 " Number of Hard Links To Inode = " $3 }' | awk '!seen[$0]++ { print; }' | uniq -u | sort | less
+
 
