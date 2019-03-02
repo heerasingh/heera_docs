@@ -15,3 +15,38 @@ Prerequisites to run the notification tool (case_monitor.py):
         pip3 install pipreqs
 
 
+
+Addional notes: 
+
+Make changes in "config.ini" file to add desired email-account and login details.  
+
+Example: 
+------------------------------------------------------
+[login_details]
+# Login details of Email account:
+HOSTNAME = mail.example.com
+USERNAME = myemail-id@example.com
+PASSWORD = mypassword 
+
+[folder_details]
+# Folder name which we will monitor for incoming emails.
+MAILBOX = Inbox
+
+##  Example to check email in a sub folder.
+##MAILBOX = 'Inbox/TestFolder'
+
+[subject_details] 
+#  Change subject according to your requirement.  
+sev_sub = Severity-1
+
+[check_freq]
+# Check email in every 30 seconds
+MAIL_CHECK_FREQ = 30
+
+[email_offset]
+# Set offset, if unread messages never goes to zero
+OFFSET_NEWMAIL = 0
+------------------------------------------------------ 
+
+
+
