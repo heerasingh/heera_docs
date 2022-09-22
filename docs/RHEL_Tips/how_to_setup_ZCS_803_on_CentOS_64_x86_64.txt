@@ -1,0 +1,669 @@
+
+
+How to Setup Zimbra Collaboration Suite 8.0.3 Mail Server on CentOS 6.4 x86_64
+==============================================================================
+
+
+
+Zimbra Collaboration Suite (ZCS) is a groupware product created by Zimbra, Inc. Zimbra email is one of the popular open source email in the world. Before we start installing ZCS email software, please make sure that all the prequisites has been configured and installed. This post will describe the steps to setup Zimbra Collaboration Suite (ZCS) 8.0.3 Mail Server open source edition on CentOS 6.4 64bit. ZCS 8.0.3 only released the 64bit version for Redhat Linux Enterprise 6 (RHEL6) or CentOS 6 Operating System.
+
+
+
+
+
+Steps:
+1. Disabled SELinux:
+# setenforce 0
+# vim /etc/sysconfig/selinux
+-----------------------------------------------------------------
+SELINUX=disabled
+-----------------------------------------------------------------
+
+
+
+2. Configure "/etc/hosts" file and hostname:
+# cat /etc/hosts
+-----------------------------------------------------------------
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+192.168.2.104   mail.example.local mail
+-----------------------------------------------------------------
+
+
+# hostname
+-----------------------------------------------------------------
+mail.example.local
+-----------------------------------------------------------------
+
+
+
+3. Stop sendmail, postfix or any MTA service:
+# service postfix stop
+# chkconfig postfix off
+# service sendmail stop
+# chkconfig sendmail off
+# service iptables stop
+# chkconfig iptables off
+# service ip6tables stop
+# chkconfig ip6tables off
+
+
+
+4. Install the required packages and libraries using the following command:
+# yum install nc sudo libidn gmp libstdc++ perl sysstat sqlite -y
+
+
+
+5. Prepare DNS setup for your mail domain. MX record is mandotary in this setup:
+Configure "named.conf" file to file your DNS requirement:
+#  vim /var/named/chroot/etc/named.conf
+-----------------------------------------------------------------
+//
+// named.conf
+//
+// Provided by Red Hat bind package to configure the ISC BIND named(8) DNS
+// server as a caching only nameserver (as a localhost DNS resolver only).
+//
+// See /usr/share/doc/bind*/sample/ for example named configuration files.
+//
+
+options {
+        listen-on port 53 { 127.0.0.1;192.168.2.104; };
+        listen-on-v6 port 53 { ::1; };
+        directory       "/var/named";
+        dump-file       "/var/named/data/cache_dump.db";
+        statistics-file "/var/named/data/named_stats.txt";
+        memstatistics-file "/var/named/data/named_mem_stats.txt";
+        allow-query     { localhost; };
+        recursion yes;
+
+        dnssec-enable yes;
+        dnssec-validation yes;
+        dnssec-lookaside auto;
+
+        /* Path to ISC DLV key */
+        bindkeys-file "/etc/named.iscdlv.key";
+
+        managed-keys-directory "/var/named/dynamic";
+};
+
+logging {
+        channel default_debug {
+                file "data/named.run";
+                severity dynamic;
+        };
+};
+
+zone "." IN {
+        type hint;
+        file "named.ca";
+};
+
+zone "example.local" {
+    type master;
+    file "example.local.zone";
+};
+
+zone "2.168.192.in-addr.arpa" IN {
+        type master;
+        file "192.168.2.zone";
+};
+
+include "/etc/named.rfc1912.zones";
+include "/etc/named.root.key";
+-----------------------------------------------------------------
+
+
+Prepare forward zone:
+# vim /var/named/chroot/var/named/example.local.zone
+-----------------------------------------------------------------
+;
+;       Addresses and other host information.
+;
+@       IN      SOA     example.local. hostmaster.example.local. (
+                               2013042301      ; Serial
+                               43200      ; Refresh
+                               3600       ; Retry
+                               3600000    ; Expire
+                               2592000 )  ; Minimum
+
+;       Define the nameservers and the mail servers
+
+               IN      NS      ns1.example.local.
+               IN      A       192.168.2.104
+               IN      MX      10 mail.example.local.
+
+centos64       IN      A       192.168.2.104
+mail           IN      A       192.168.2.104
+ns1            IN      A       192.168.2.104
+-----------------------------------------------------------------
+
+
+Prepare reverse zone:
+# vim /var/named/chroot/var/named/192.168.2.zone
+-----------------------------------------------------------------
+;
+;       Addresses and other host information.
+;
+@       IN      SOA     example.local. hostmaster.example.local. (
+                               2013042301      ; Serial
+                               43200      ; Refresh
+                               3600       ; Retry
+                               3600000    ; Expire
+                               2592000 )  ; Minimum
+
+2.168.192.in-addr.arpa. IN      NS      centos64.example.local.
+
+104.2.168.192.in-addr.arpa. IN PTR mail.example.local.
+104.2.168.192.in-addr.arpa. IN PTR ns1.example.local.
+-----------------------------------------------------------------
+
+
+
+6. Test the DNS:
+# host -t mx example.local
+-----------------------------------------------------------------
+example.local mail is handled by 10 mail.example.local.
+-----------------------------------------------------------------
+
+# host -t ns example.local
+-----------------------------------------------------------------
+example.local name server ns1.example.local.
+-----------------------------------------------------------------
+
+
+
+7. Download Zimbra Collaboration Suite 8.0.3 from zimbra official website:
+# wget "http://files2.zimbra.com/downloads/8.0.3_GA/zcs-8.0.3_GA_5664.RHEL6_64.20130305090204.tgz"
+
+
+
+8. Extract Zimbra Collaboration Suite 8.0.3:
+# tar xvzf zcs-8.0.3_GA_5664.RHEL6_64.20130305090204.tgz
+# cd zcs-8.0.3_GA_5664.RHEL6_64.20130305090204
+
+
+
+9. Start the Zimbra Collaboration Suite 8.0.3 Installation:
+# ./install.sh --platform-override
+-----------------------------------------------------------------
+Operations logged to /tmp/install.log.11027
+Checking for existing installation...
+    zimbra-ldap...NOT FOUND
+    zimbra-logger...NOT FOUND
+    zimbra-mta...NOT FOUND
+    zimbra-snmp...NOT FOUND
+    zimbra-store...NOT FOUND
+    zimbra-apache...NOT FOUND
+    zimbra-spell...NOT FOUND
+    zimbra-convertd...NOT FOUND
+    zimbra-memcached...NOT FOUND
+    zimbra-proxy...NOT FOUND
+    zimbra-archiving...NOT FOUND
+    zimbra-cluster...NOT FOUND
+    zimbra-core...NOT FOUND
+
+
+PLEASE READ THIS AGREEMENT CAREFULLY BEFORE USING THE SOFTWARE.
+ZIMBRA, INC. ("ZIMBRA") WILL ONLY LICENSE THIS SOFTWARE TO YOU IF YOU
+FIRST ACCEPT THE TERMS OF THIS AGREEMENT. BY DOWNLOADING OR INSTALLING
+THE SOFTWARE, OR USING THE PRODUCT, YOU ARE CONSENTING TO BE BOUND BY
+THIS AGREEMENT. IF YOU DO NOT AGREE TO ALL OF THE TERMS OF THIS
+AGREEMENT, THEN DO NOT DOWNLOAD, INSTALL OR USE THE PRODUCT.
+
+License Terms for the Zimbra Collaboration Suite:
+
+http://www.zimbra.com/license/zimbra_public_eula_2.1.html
+
+Do you agree with the terms of the software license agreement? [N] y
+
+
+
+
+Oracle Binary Code License Agreement for the Java SE Platform Products
+
+ORACLE  AMERICA, INC. ("ORACLE"), FOR AND ON BEHALF OF ITSELF AND ITS SUBSIDIARIES AND AFFILIATES UNDER COMMON CONTROL, IS WILLING TO  LICENSE  THE SOFTWARE  TO YOU ONLY UPON THE CONDITION THAT YOU ACCEPT ALL OF THE TERMS  CONTAINED IN THIS BINARY CODE LICENSE AGREEMENT AND SUPPLEMENTAL  LICENSE TERMS (COLLECTIVELY "AGREEMENT").  PLEASE READ THE AGREEMENT  CAREFULLY.  BY SELECTING THE "ACCEPT LICENSE AGREEMENT" (OR THE EQUIVALENT) BUTTON AND/OR BY USING THE SOFTWARE YOU ACKNOWLEDGE THAT YOU HAVE READ THE TERMS AND AGREE TO THEM.  IF YOU ARE AGREEING TO THESE TERMS ON BEHALF OF A  COMPANY OR OTHER LEGAL ENTITY, YOU REPRESENT THAT YOU HAVE THE LEGAL  AUTHORITY TO BIND THE LEGAL ENTITY TO THESE TERMS.  IF YOU DO NOT HAVE SUCH  AUTHORITY, OR IF YOU DO NOT WISH TO BE BOUND BY THE TERMS, THEN SELECT THE "DECLINE LICENSE AGREEMENT" (OR THE EQUIVALENT) BUTTON AND YOU MUST NOT USE THE SOFTWARE ON THIS SITE OR ANY OTHER MEDIA ON WHICH THE SOFTWARE IS CONTAINED.
+
+1.  DEFINITIONS.  "Software" means the Java SE Platform Products in binary form that you selected for download, install or use from Oracle or its authorized licensees, any other machine readable materials (including, but not limited to,  libraries,  source  files,  header  files, and data  files), any updates or error corrections provided by Oracle, and any user manuals, programming guides and other documentation provided to you by Oracle under this Agreement.  "General Purpose Desktop Computers and Servers" means computers,  including desktop and laptop computers, or servers, used for general  computing functions under end user control (such as but not specifically  limited to email, general purpose Internet browsing, and office suite  productivity tools).  The use of Software in systems and solutions that provide dedicated functionality (other than as mentioned above) or designed  for use in embedded or function-specific software applications, for example but not limited to: Software embedded in or bundled with industrial control systems, wireless mobile telephones, wireless handheld devices, netbooks, kiosks, TV/STB, Blu-ray Disc devices, telematics and network control switching equipment, printers and storage management systems, and other related systems are excluded from this definition and not licensed under this  Agreement.  "Programs" means Java technology applets and applications  intended to run on the Java Platform, Standard Edition platform on Java-enabled General Purpose Desktop Computers and Servers.  ?Commercial Features? means those features identified in Table 1-1 (Commercial Features In Java SE Product Editions) of the Software documentation accessible at  http://www.oracle.com/technetwork/java/javase/documentation/index.html.  ?README File? means the README file for the Software accessible at http://www.oracle.com/technetwork/java/javase/terms/readme/index.html.
+
+2.  LICENSE TO USE.  Subject to the terms and conditions of this Agreement   including, but not limited to, the Java Technology Restrictions of the  Supplemental License Terms, Oracle grants you a non-exclusive, non-transferable, limited license without license fees to reproduce and use internally the Software complete and unmodified for the sole purpose of  running Programs.  THE LICENSE SET FORTH IN THIS SECTION 2 DOES NOT EXTEND TO THE COMMERCIAL FEATURES.  YOUR RIGHTS AND OBLIGATIONS RELATED TO THE COMMERCIAL FEATURES ARE AS SET FORTH IN THE SUPPLEMENTAL TERMS ALONG WITH ADDITIONAL LICENSES FOR DEVELOPERS AND PUBLISHERS.
+
+3.  RESTRICTIONS.  Software is copyrighted.  Title to Software and all associated intellectual property rights is retained by Oracle and/or its licensors.  Unless enforcement is prohibited by applicable law, you may not modify, decompile, or reverse engineer Software.  You acknowledge that the Software is developed for general use in a variety of information management applications; it is not developed or intended for use in any inherently dangerous applications, including applications that may create a risk of personal injury. If you use the Software in dangerous applications, then you shall be responsible to take all appropriate fail-safe, backup, redundancy, and other measures to ensure its safe use.  Oracle disclaims any express or implied warranty of fitness for such uses.  No right, title or interest in or to any trademark,  service mark, logo or trade name of Oracle or its licensors is granted under this  Agreement.  Additional restrictions for developers and/or publishers licenses are set forth in the Supplemental License Terms.
+
+4.  DISCLAIMER OF WARRANTY.  THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND.  ORACLE FURTHER DISCLAIMS ALL WARRANTIES, EXPRESS AND IMPLIED, INCLUDING WITHOUT LIMITATION, ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE OR NONINFRINGEMENT.
+
+5.  LIMITATION OF LIABILITY.  IN NO EVENT SHALL ORACLE BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, PUNITIVE OR CONSEQUENTIAL DAMAGES, OR DAMAGES FOR LOSS OF PROFITS, REVENUE, DATA OR DATA USE, INCURRED BY YOU OR ANY THIRD PARTY, WHETHER IN AN ACTION IN CONTRACT OR TORT, EVEN IF ORACLE HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. ORACLE'S ENTIRE LIABILITY FOR DAMAGES HEREUNDER SHALL IN NO EVENT EXCEED ONE THOUSAND DOLLARS (U.S. $1,000).
+
+6.  TERMINATION.  This Agreement is effective until terminated.  You may terminate this Agreement at any time by destroying all copies of Software.  This Agreement will terminate immediately without notice from Oracle if you  fail to comply with any provision of this Agreement.  Either party may  terminate this Agreement immediately should any Software become, or in either party's opinion be likely to become, the subject of a claim of infringement  of any intellectual property  right.  Upon termination, you must destroy all copies of Software.
+
+7.  EXPORT  REGULATIONS.  You agree that U.S. export control laws and other applicable export and import laws govern your use of the Software, including technical data; additional information can be found on Oracle's Global Trade Compliance web site (http://www.oracle.com/products/export). You agree that neither the Software nor any direct product thereof will be exported, directly, or indirectly, in violation of these laws, or will be used for any purpose prohibited by these laws including, without limitation, nuclear, chemical, or biological weapons proliferation.
+
+8.  TRADEMARKS AND LOGOS.  You acknowledge and agree as between you
+and Oracle that Oracle owns the ORACLE and JAVA trademarks and all ORACLE- and JAVA-related trademarks, service marks, logos and other brand
+designations ("Oracle Marks"), and you agree to comply with the Third
+Party Usage Guidelines for Oracle Trademarks currently located at
+http://www.oracle.com/us/legal/third-party-trademarks/index.html.  Any use you make of the Oracle Marks inures to Oracle's benefit.
+
+9.  U.S.  GOVERNMENT LICENSE RIGHTS.  If Software is being acquired by or on  behalf of the U.S. Government or by a U.S. Government prime contractor or  subcontractor (at any tier), then the Government's rights in Software and accompanying documentation shall be only those set forth in this Agreement.
+
+10.  GOVERNING  LAW.  This agreement is governed by the substantive and procedural laws of California. You and Oracle agree to submit to the exclusive jurisdiction of, and venue in, the courts of San Francisco, or Santa Clara counties in California in any dispute arising out of or relating to this agreement.
+
+11.  SEVERABILITY.  If any  provision of this  Agreement is held to be unenforceable, this Agreement will remain in effect with the provision omitted, unless omission would frustrate the intent of the parties, in which case this Agreement will immediately terminate.
+
+12.  INTEGRATION.  This Agreement is the entire agreement  between you and Oracle relating to its subject matter.  It supersedes all prior or contemporaneous oral or written communications, proposals, representations  and warranties and prevails over any  conflicting  or additional  terms  of  any  quote, order, acknowledgment, or other communication between the parties  relating to its subject matter during the term of this Agreement.  No modification of this Agreement will be  binding,  unless  in  writing  and  signed  by an  authorized representative of each party.
+
+SUPPLEMENTAL LICENSE TERMS
+
+These  Supplemental  License  Terms add to or modify  the terms of the Binary Code License Agreement.  Capitalized terms not defined in these Supplemental  Terms shall have the same meanings ascribed to them in the Binary Code License Agreement.  These Supplemental Terms shall supersede any  inconsistent or conflicting terms in the Binary Code License Agreement, or in any license contained within the Software.
+
+A.  COMMERCIAL FEATURES.  You may not use the Commercial Features for running Programs, Java applets or applications in your internal business operations or for any commercial or production  purpose, or for any purpose other than as set forth in Sections B, C, D and E of these Supplemental Terms.  If You want to use the Commercial Features for any purpose other than as permitted in this Agreement, You must obtain a separate license from Oracle.
+
+B.  SOFTWARE INTERNAL USE FOR DEVELOPMENT LICENSE GRANT.  Subject to the terms and conditions of this Agreement and restrictions and exceptions set forth in the README File incorporated herein by reference,  including, but not limited to the Java Technology Restrictions of these  Supplemental Terms, Oracle grants you a non-exclusive, non-transferable,  limited license without fees to reproduce internally and use internally the Software complete and unmodified for the purpose of designing, developing, and testing your Programs.
+
+C.  LICENSE TO DISTRIBUTE SOFTWARE.  Subject to the terms and conditions of this Agreement and restrictions and exceptions set forth in the   README File, including, but not limited to the Java Technology Restrictions of these Supplemental Terms, Oracle grants you a non-exclusive, non-transferable, limited license without fees to reproduce and distribute the  Software, provided that (i) you distribute the Software complete and  unmodified and only bundled as part of, and for the sole purpose of running, your Programs, (ii) the Programs add significant and primary functionality  to the Software, (iii) you do not distribute additional  software intended to replace any component(s) of the Software, (iv) you do not remove or alter any proprietary legends or notices contained in the Software, (v) you only distribute the Software subject to a license agreement that: (a) is a complete, unmodified reproduction of this Agreement; or (b) protects Oracle's  interests consistent with the terms contained in this Agreement and that includes the notice set forth in Section G, and (vi) you agree to defend and indemnify Oracle and its licensors from and against any damages, costs, liabilities, settlement amounts and/or expenses (including  attorneys' fees)  incurred in connection  with any claim, lawsuit or action by any third party that arises or results from the use or distribution of any and all Programs and/or Software.
+
+D.  LICENSE TO DISTRIBUTE REDISTRIBUTABLES.  Subject to the terms and conditions of this Agreement and restrictions and exceptions set forth in the README  File, including but not limited to the Java Technology Restrictions of these Supplemental Terms, Oracle grants you a non-exclusive,  non-transferable, limited license without fees to reproduce and distribute  those files specifically identified as redistributable in the   README File ("Redistributables") provided that: (i) you distribute the  Redistributables complete and unmodified, and only bundled as part of Programs, (ii) the Programs add significant and primary functionality to the  Redistributables, (iii) you do not distribute additional software intended to supersede any component(s) of the Redistributables (unless otherwise specified in the applicable README File), (iv) you do not remove or alter any proprietary legends or notices contained in or on the Redistributables, (v)  you only distribute the Redistributables pursuant to a license agreement  that: (a) is a complete, unmodified reproduction of this Agreement; or (b) protects Oracle's interests consistent with the terms contained in the Agreement and includes the notice set forth in Section G, (vi) you agree to defend and indemnify Oracle and its licensors from and against any damages,  costs, liabilities, settlement amounts and/or expenses (including  attorneys'  fees) incurred in connection with any claim, lawsuit or action by any third  party that arises or results from the use or distribution of any and all Programs and/or Software.
+
+E.  DISTRIBUTION BY PUBLISHERS.  This section pertains to your distribution  of the JavaTM SE Development Kit Software with your printed book or magazine (as those terms are commonly used in the industry) relating to Java technology ("Publication").  Subject to and conditioned upon your compliance  with the restrictions and obligations contained in the Agreement, Oracle hereby grants to you a non-exclusive, nontransferable limited right to reproduce complete and unmodified copies of the Software on electronic  media (the "Media") for the sole purpose of inclusion and distribution with your Publication(s), subject to the following terms: (i) You may not distribute  the Software on a stand-alone basis; it must be distributed with your Publication(s); (ii) You are responsible for downloading the Software from the applicable Oracle web site; (iii) You must refer to the Software as JavaTM SE Development Kit; (iv) The Software must be reproduced in its entirety and without any modification whatsoever (including with respect to all proprietary notices) and distributed with your Publication subject to a license agreement that is a complete, unmodified reproduction of this Agreement; (v) The Media label shall include the following information:  Copyright 2011, Oracle America, Inc.  All rights reserved.  Use is subject to license terms.  ORACLE and JAVA trademarks and all ORACLE- and JAVA-related trademarks, service marks, logos and other brand
+designations are trademarks or registered  trademarks of Oracle in the U.S. and other countries.  This information must be placed on the Media  label in such a manner as to only apply to the Oracle  Software;  (vi) You must clearly identify the Software as Oracle's product on the Media  holder or Media label, and you may not state or imply that Oracle is responsible for any third-party software contained on the Media; (vii) You may not include any third  party software on the Media which is intended to be a  replacement or substitute for the Software; (viii) You agree to defend and indemnify Oracle and its licensors from and against any damages, costs, liabilities, settlement amounts and/or expenses (including  attorneys'  fees) incurred in connection with any claim, lawsuit or action by any third party that arises or results from the use or distribution of the Software and/or the Publication; ; and (ix) You shall provide Oracle with a written notice for each Publication; such notice shall include the following information: (1) title of Publication, (2) author(s), (3) date of Publication,  and (4)  ISBN or ISSN  numbers.  Such notice shall be sent to  Oracle America, Inc.,  500 Oracle  Parkway, Redwood Shores,  California  94065 U.S.A , Attention:  General Counsel.
+
+F.  JAVA TECHNOLOGY RESTRICTIONS.  You may not create, modify, or change the behavior of, or authorize your licensees to create, modify, or change the behavior of, classes, interfaces, or subpackages that are in any way  identified  as  "java", "javax", "sun", ?oracle? or similar convention as   specified by Oracle in any naming convention designation.
+
+G.  COMMERCIAL FEATURES NOTICE.  For purpose of complying with Supplemental Term Section  C.(v)(b) and D.(v)(b), your license agreement shall include the following notice, where the notice is displayed in a manner that anyone using the Software will see the notice:
+
+Use of the Commercial Features for any commercial or production purpose requires a separate license from Oracle.  ?Commercial Features? means those features identified Table 1-1 (Commercial Features In Java SE Product Editions) of the Software documentation accessible at http://www.oracle.com/technetwork/java/javase/documentation/index.html
+
+H.  SOURCE CODE.  Software may contain source code that, unless expressly   licensed for other purposes, is provided solely for reference purposes  pursuant to the terms of this Agreement.  Source code may not be redistributed  unless  expressly  provided for in this Agreement.
+
+I.  THIRD PARTY CODE.  Additional copyright notices and license terms applicable to portions of the Software are set forth in the THIRDPARTYLICENSEREADME file accessible at http://www.oracle.com/technetwork/java/javase/documentation/index.html.  In addition to any terms and conditions of any third party opensource/freeware license identified in the  THIRDPARTYLICENSEREADME file, the disclaimer of warranty and limitation of liability  provisions in  paragraphs 4 and 5 of the Binary Code License Agreement shall apply to all Software in this distribution.
+
+J.  TERMINATION FOR INFRINGEMENT.  Either party may terminate this Agreement immediately should any Software become, or in either party's opinion be likely to become, the subject of a claim of infringement of any intellectual property right.
+
+K.  INSTALLATION AND AUTO-UPDATE.  The Software's installation and auto-update processes transmit a limited amount of data to Oracle (or its service  provider) about those specific processes to help Oracle understand and optimize them.  Oracle does not associate the data with personally  identifiable  information.  You can find more  information about the data Oracle collects as a result of your Software download at http://www.oracle.com/technetwork/java/javase/documentation/index.html.
+
+For inquiries please contact:  Oracle America, Inc., 500 Oracle Parkway,
+Redwood Shores, California 94065, USA.
+
+Last updated May 17, 2011
+
+
+
+
+Do you agree with the terms of the software license agreement? [N] y
+
+Checking for prerequisites...
+     FOUND: NPTL
+     FOUND: nc-1.84-22
+     FOUND: sudo-1.8.6p3-7
+     FOUND: libidn-1.18-2
+     FOUND: gmp-4.3.1-7
+     FOUND: /usr/lib64/libstdc++.so.6
+
+Checking for suggested prerequisites...
+     FOUND: perl-5.10.1
+     FOUND: sysstat
+     FOUND: sqlite
+Prerequisite check complete.
+
+Checking for installable packages
+
+Found zimbra-core
+Found zimbra-ldap
+Found zimbra-logger
+Found zimbra-mta
+Found zimbra-snmp
+Found zimbra-store
+Found zimbra-apache
+Found zimbra-spell
+Found zimbra-memcached
+Found zimbra-proxy
+
+
+Select the packages to install
+
+Install zimbra-ldap [Y]
+
+Install zimbra-logger [Y]
+
+Install zimbra-mta [Y]
+
+Install zimbra-snmp [Y]
+
+Install zimbra-store [Y]
+
+Install zimbra-apache [Y]
+
+Install zimbra-spell [Y]
+
+Install zimbra-memcached [N] y
+
+Install zimbra-proxy [N] y
+Checking required space for zimbra-core
+Checking space for zimbra-store
+
+Installing:
+    zimbra-core
+    zimbra-ldap
+    zimbra-logger
+    zimbra-mta
+    zimbra-snmp
+    zimbra-store
+    zimbra-apache
+    zimbra-spell
+    zimbra-memcached
+    zimbra-proxy
+
+You appear to be installing packages on a platform different
+than the platform for which they were built.
+
+This platform is CentOS6_64
+Packages found: RHEL6_64
+This may or may not work.
+
+Using packages for a platform in which they were not designed for
+may result in an installation that is NOT usable. Your support
+options may be limited if you choose to continue.
+
+
+Install anyway? [N] y
+
+The system will be modified.  Continue? [N] y
+
+Removing /opt/zimbra
+Removing zimbra crontab entry...done.
+Cleaning up zimbra init scripts...done.
+Cleaning up /etc/ld.so.conf...done.
+Cleaning up /etc/security/limits.conf...done.
+
+Finished removing Zimbra Collaboration Server.
+
+Installing packages
+
+    zimbra-core......zimbra-core-8.0.3_GA_5664.RHEL6_64-20130305090204.x86_64.rpm...done
+    zimbra-ldap......zimbra-ldap-8.0.3_GA_5664.RHEL6_64-20130305090204.x86_64.rpm...done
+    zimbra-logger......zimbra-logger-8.0.3_GA_5664.RHEL6_64-20130305090204.x86_64.rpm...done
+    zimbra-mta......zimbra-mta-8.0.3_GA_5664.RHEL6_64-20130305090204.x86_64.rpm...done
+    zimbra-snmp......zimbra-snmp-8.0.3_GA_5664.RHEL6_64-20130305090204.x86_64.rpm...done
+    zimbra-store......zimbra-store-8.0.3_GA_5664.RHEL6_64-20130305090204.x86_64.rpm...done
+    zimbra-apache......zimbra-apache-8.0.3_GA_5664.RHEL6_64-20130305090204.x86_64.rpm...done
+    zimbra-spell......zimbra-spell-8.0.3_GA_5664.RHEL6_64-20130305090204.x86_64.rpm...done
+    zimbra-memcached......zimbra-memcached-8.0.3_GA_5664.RHEL6_64-20130305090204.x86_64.rpm...done
+    zimbra-proxy......zimbra-proxy-8.0.3_GA_5664.RHEL6_64-20130305090204.x86_64.rpm...done
+Operations logged to /tmp/zmsetup.04232013-092526.log
+Installing LDAP configuration database...done.
+Setting defaults...
+
+DNS ERROR resolving MX for mail.example.local
+It is suggested that the domain name have an MX record configured in DNS
+Change domain name? [Yes] yes
+Create domain: [mail.example.local] example.local
+        MX: mail.example.local (192.168.2.104)
+
+        Interface: 192.168.2.104
+        Interface: 127.0.0.1
+        Interface: ::1
+done.
+Checking for port conflicts
+
+Main menu
+
+   1) Common Configuration:
+   2) zimbra-ldap:                             Enabled
+   3) zimbra-store:                            Enabled
+        +Create Admin User:                    yes
+        +Admin user to create:                 admin@example.local
+******* +Admin Password                        UNSET
+        +Anti-virus quarantine user:           virus-quarantine.rjtglppwv@example.local
+        +Enable automated spam training:       yes
+        +Spam training user:                   spam.bdel6cko@example.local
+        +Non-spam(Ham) training user:          ham.yrixxg8ny@example.local
+        +SMTP host:                            mail.example.local
+        +Web server HTTP port:                 80
+        +Web server HTTPS port:                443
+        +Web server mode:                      https
+        +IMAP server port:                     7143
+        +IMAP server SSL port:                 7993
+        +POP server port:                      7110
+        +POP server SSL port:                  7995
+        +Use spell check server:               yes
+        +Spell server URL:                     http://mail.example.local:7780/aspell.php
+        +Enable version update checks:         TRUE
+        +Enable version update notifications:  TRUE
+        +Version update notification email:    admin@example.local
+        +Version update source email:          admin@example.local
+
+   4) zimbra-mta:                              Enabled
+   5) zimbra-snmp:                             Enabled
+   6) zimbra-logger:                           Enabled
+   7) zimbra-spell:                            Enabled
+   8) zimbra-proxy:                            Enabled
+   9) Default Class of Service Configuration:
+   r) Start servers after configuration        yes
+   s) Save config to file
+   x) Expand menu
+   q) Quit
+
+Address unconfigured (**) items  (? - help) 3
+
+
+Store configuration
+
+   1) Status:                                  Enabled
+   2) Create Admin User:                       yes
+   3) Admin user to create:                    admin@example.local
+** 4) Admin Password                           UNSET
+   5) Anti-virus quarantine user:              virus-quarantine.rjtglppwv@example.local
+   6) Enable automated spam training:          yes
+   7) Spam training user:                      spam.bdel6cko@example.local
+   8) Non-spam(Ham) training user:             ham.yrixxg8ny@example.local
+   9) SMTP host:                               mail.example.local
+  10) Web server HTTP port:                    80
+  11) Web server HTTPS port:                   443
+  12) Web server mode:                         https
+  13) IMAP server port:                        7143
+  14) IMAP server SSL port:                    7993
+  15) POP server port:                         7110
+  16) POP server SSL port:                     7995
+  17) Use spell check server:                  yes
+  18) Spell server URL:                        http://mail.example.local:7780/aspell.php
+  19) Enable version update checks:            TRUE
+  20) Enable version update notifications:     TRUE
+  21) Version update notification email:       admin@example.local
+  22) Version update source email:             admin@example.local
+
+Select, or 'r' for previous menu [r] 4
+
+Password for admin@example.local (min 6 characters): [gZPDVAF4] password
+
+Store configuration
+
+   1) Status:                                  Enabled
+   2) Create Admin User:                       yes
+   3) Admin user to create:                    admin@example.local
+   4) Admin Password                           set
+   5) Anti-virus quarantine user:              virus-quarantine.rjtglppwv@example.local
+   6) Enable automated spam training:          yes
+   7) Spam training user:                      spam.bdel6cko@example.local
+   8) Non-spam(Ham) training user:             ham.yrixxg8ny@example.local
+   9) SMTP host:                               mail.example.local
+  10) Web server HTTP port:                    80
+  11) Web server HTTPS port:                   443
+  12) Web server mode:                         https
+  13) IMAP server port:                        7143
+  14) IMAP server SSL port:                    7993
+  15) POP server port:                         7110
+  16) POP server SSL port:                     7995
+  17) Use spell check server:                  yes
+  18) Spell server URL:                        http://mail.example.local:7780/aspell.php
+  19) Enable version update checks:            TRUE
+  20) Enable version update notifications:     TRUE
+  21) Version update notification email:       admin@example.local
+  22) Version update source email:             admin@example.local
+
+Select, or 'r' for previous menu [r] r
+
+Main menu
+
+   1) Common Configuration:
+   2) zimbra-ldap:                             Enabled
+   3) zimbra-store:                            Enabled
+   4) zimbra-mta:                              Enabled
+   5) zimbra-snmp:                             Enabled
+   6) zimbra-logger:                           Enabled
+   7) zimbra-spell:                            Enabled
+   8) zimbra-proxy:                            Enabled
+   9) Default Class of Service Configuration:
+   r) Start servers after configuration        yes
+   s) Save config to file
+   x) Expand menu
+   q) Quit
+
+*** CONFIGURATION COMPLETE - press 'a' to apply
+Select from menu, or press 'a' to apply config (? - help) a
+Save configuration data to a file? [Yes]
+Save config in file: [/opt/zimbra/config.18974]
+Saving config in /opt/zimbra/config.18974...done.
+The system will be modified - continue? [No] yes
+Operations logged to /tmp/zmsetup.04232013-092526.log
+Setting local config values...done.
+Initializing core config...Setting up CA...done.
+Deploying CA to /opt/zimbra/conf/ca ...done.
+Creating SSL zimbra-store certificate...done.
+Creating new zimbra-ldap SSL certificate...done.
+Creating new zimbra-mta SSL certificate...done.
+Creating new zimbra-proxy SSL certificate...done.
+Installing mailboxd SSL certificates...done.
+Installing MTA SSL certificates...done.
+Installing LDAP SSL certificate...done.
+Installing Proxy SSL certificate...done.
+Initializing ldap...done.
+Setting replication password...done.
+Setting Postfix password...done.
+Setting amavis password...done.
+Setting nginx password...done.
+Creating server entry for mail.example.local...done.
+Setting Zimbra IP Mode...done.
+Saving CA in ldap ...done.
+Saving SSL Certificate in ldap ...done.
+Setting spell check URL...done.
+Setting service ports on mail.example.local...done.
+Adding mail.example.local to zimbraMailHostPool in default COS...done.
+Setting zimbraFeatureTasksEnabled=TRUE...done.
+Setting zimbraFeatureBriefcasesEnabled=FALSE...done.
+Setting MTA auth host...done.
+Setting TimeZone Preference...done.
+Initializing mta config...done.
+Setting services on mail.example.local...done.
+Creating domain example.local...done.
+Setting default domain name...done.
+Creating domain example.local...already exists.
+Creating admin account admin@example.local...done.
+Creating root alias...done.
+Creating postmaster alias...done.
+Creating user spam.bdel6cko@example.local...done.
+Creating user ham.yrixxg8ny@example.local...done.
+Creating user virus-quarantine.rjtglppwv@example.local...done.
+Setting spam training and Anti-virus quarantine accounts...done.
+Initializing store sql database...done.
+Setting zimbraSmtpHostname for mail.example.local...done.
+Configuring SNMP...done.
+Setting up syslog.conf...done.
+Starting servers...done.
+Installing common zimlets...
+        com_zimbra_attachcontacts...done.
+        com_zimbra_cert_manager...done.
+        com_zimbra_adminversioncheck...done.
+        com_zimbra_phone...done.
+        com_zimbra_srchhighlighter...done.
+        com_zimbra_viewmail...done.
+        com_zimbra_url...done.
+        com_zimbra_webex...done.
+        com_zimbra_email...done.
+        com_zimbra_date...done.
+        com_zimbra_proxy_config...done.
+        com_zimbra_attachmail...done.
+        com_zimbra_bulkprovision...done.
+        com_zimbra_clientuploader...done.
+        com_zimbra_ymemoticons...done.
+        com_zimbra_tooltip...done.
+Finished installing common zimlets.
+Restarting mailboxd...done.
+Creating galsync account for default domain...done.
+
+You have the option of notifying Zimbra of your installation.
+This helps us to track the uptake of the Zimbra Collaboration Server.
+The only information that will be transmitted is:
+        The VERSION of zcs installed (8.0.3_GA_5664_CentOS6_64)
+        The ADMIN EMAIL ADDRESS created (admin@example.local)
+
+Notify Zimbra of your installation? [Yes] no
+Notification skipped
+Setting up zimbra crontab...done.
+
+
+Moving /tmp/zmsetup.04232013-092526.log to /opt/zimbra/log
+
+
+Configuration complete - press return to exit
+-----------------------------------------------------------------
+
+
+
+10. Start Zimbra service:
+# su - zimbra
+$ zmcontrol start
+-----------------------------------------------------------------
+Host mail.example.local
+        Starting zmconfigd...Done.
+        Starting logger...Done.
+        Starting mailbox...Done.
+        Starting memcached...Done.
+        Starting proxy...Done.
+        Starting antispam...Done.
+        Starting antivirus...Done.
+        Starting snmp...Done.
+        Starting spell...Done.
+        Starting mta...Done.
+        Starting stats...Done.
+-----------------------------------------------------------------
+
+
+
+11. Check status of Zimbra service:
+$ zmcontrol status
+-----------------------------------------------------------------
+ost mail.example.local
+        antispam                Running
+        antivirus               Running
+        ldap                    Running
+        logger                  Running
+        mailbox                 Running
+        memcached               Running
+        mta                     Running
+        proxy                   Running
+        snmp                    Running
+        spell                   Running
+        stats                   Running
+        zmconfigd               Running
+-----------------------------------------------------------------
+
+
+
+12. Open Zimbra Admin Panel on webbrowser:
+URL:	https://mail.example.local:7071
+User: admin
+Pass: 'use password which one set druing installation'
+
+
+
+
+
+
+
+
+
+Reference:
+http://www.ehowstuff.com/how-to-setup-zimbra-collaboration-suite-8-0-3-mail-server-on-centos-6-4-x86_64/
+
+

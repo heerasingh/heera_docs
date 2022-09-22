@@ -1,0 +1,166 @@
+
+CONFIGURE RSYNC SERVER AND CLIENT FOR REMOTE BACKUP
+
+
+==================================================
+Steps on rsync server:
+==================================================
+
+Step 1: 
+Install xinetd and rsync packages:
+# yum install xinetd rsync -y
+
+
+Step 2: 
+Make sure xinetd is running on levels 3, 4 and 5:
+# chkconfig xinetd on
+	OR
+# /sbin/chkconfig --level 345 xinetd on
+
+
+Step 3: 
+Modify rsync xinetd configuration and change "disable = yes" to "disable = no":
+# vim /etc/xinetd.d/rsync
+--------------------------------
+service rsync
+{
+        disable = no
+        socket_type     = stream
+        wait            = no
+        user            = root
+        server          = /usr/bin/rsync
+        server_args     = --daemon
+        log_on_failure  += USERID
+}
+--------------------------------
+
+
+Step 4: 
+Create rsync secrets file for passwords with format of "username:password":
+# vim /etc/rsyncd.secrets
+--------------------------------
+backupuser:bKp4972uSeR8
+--------------------------------
+	
+
+Step 5: 
+Create configruation for rsync shares
+# vim /etc/rsyncd.conf
+------------------------------------
+#### Sample of rsyncd.conf ####
+secrets file = /etc/rsyncd.secrets
+motd file = /etc/rsyncd.motd
+read only = no
+list = yes
+uid = nobody
+gid = nobody
+max connections = 8
+timeout = 300
+log format = %t%a%m%f%b
+syslog facility = local3
+log file = /var/log/rsyncd.log
+
+[BKPDATA]
+comment = Backup Data
+path = /data/
+auth users = innodata
+hosts allow = 10.120.51.0/255.255.255.0
+hosts deny = *
+list = false
+------------------------------------
+
+
+Step 6: 
+Fix up permissions and ownership and restart xinetd service:
+# chown root.root /etc/rsyncd.*
+# chmod 600 /etc/rsyncd.*
+# service xinetd restart
+
+
+Step 7:
+Check port 873 is open or not:
+# netstat -ntplu | grep 873
+
+
+Step 8: 
+Test it out locally, you should get @RSYNCD:
+# telnet 127.0.0.1 873
+======== Output ========
+Trying 127.0.0.1...
+Connected to localhost.localdomain (127.0.0.1).
+Escape character is '^]'.
+@RSYNCD: 29
+Welcome to the Backup Server.
+========================
+
+
+Step 9: 
+IPTables Firewall settings:
+Add an iptables entry for rsync’s port.
+# vim /etc/sysconfig/iptables
+----------------------------------------------------
+## Add the following entry somewhere near the other protocols, but before the final drop line.
+# rsync - add entry to allow 192.168.0.* to connect to our rsync server.
+#
+-A INPUT -s 10.120.51.0/255.255.255.0 -p tcp -m tcp --dport 873 -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 873 -j DROP
+----------------------------------------------------
+
+Or use the GUI:
+
+Start -> run command
+Type system-config-selinux there and click Run
+In the Security level dialog, escape "Other ports"
+add port 873 for both TCP and UDP
+Click Ok, confirm it by clicking Yes and start using it
+
+
+***********************************************************************
+To setup another share for download only we would create a read-only share without passwords.
+just append this to your /etc/rsyncd.conf file:
+
+[update]
+comment = update downloads
+path = /opt/update
+read only = true
+list = yes
+uid = nobody
+gid = nobody
+hosts allow = 10.120.51.0/24
+***********************************************************************
+
+
+
+
+==================================================
+Step on client machine:
+==================================================
+
+Step 1:
+Install rsync package on client machine:
+# yum install rsync -y
+
+
+Step 2:
+Create password file "rsyncd.passwd" for transfer file client machine to server.
+This file only has the password
+# vim /etc/rsyncd.passwd
+-------------------------
+bKp4972uSeR8
+-------------------------
+
+
+Step 3:
+Transfer files from client machine to server:
+# rsync -aP --password-file=/etc/rsyncd.passwd /source/path/of/backup innodata@10.120.51.121::out/
+
+
+
+
+
+Reference:
+http://www.zorranlabs.com/blog/?p=82
+http://toic.org/blog/2009/10/21/howto-create-rsync-server/
+http://www.fengcool.com/2009/07/rsync_server_and_client_backup_server_file/
+
+

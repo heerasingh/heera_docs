@@ -1,0 +1,165 @@
+
+Method 1:
+=========
+
+
+
+Step 1. 
+The first thing I've done was to make sure the CentOS 6 system is fully up-to-date, so I ran:
+# yum update
+
+
+Step 2. 
+Once the update completed, I then checked the system for any other installed JAVA packages using:
+# rpm -qa | grep -E '^open[jre|jdk]|j[re|dk]'
+
+there was the 'java-1.6.0-openjdk-1.6.0.0-1.56.1.11.8.el6_3.i686' package already installed so I removed it by running:
+# yum remove java-1.6.0-openjdk
+
+
+Step 3. 
+The next step was to go and download the required JAVA JDK package for the system according to the system architecture (32bit or 64bit).
+Download JAVA JDK6 at:
+	http://www.oracle.com/technetwork/java/javase/downloads/jdk6u35-downloads-1836443.html
+Download JAVA JDK7 at:
+	http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html
+
+
+Step 4. 
+Once the JAVA JDK package got downloaded I proceeded with installing the package.
+[a] Installing the JAVA JDK6 package in CentOS 6:
+# chmod +x jdk-6u35-linux-i586-rpm.bin
+# ./jdk-6u35-linux-i586-rpm.bin
+
+[b] Installing the JAVA JDK7 package in CentOS 6:
+# rpm -Uvh jdk-7u15-linux-i586.rpm
+
+
+Step 5. 
+Once the JAVA JDK package is installed I then needed to configure it on the system using the 'alternatives' command. 
+This is in order to tell the system what are the default commands for JAVA. 
+Most _sys_admins_ aren't aware about this and I think that it is a vital part when setting the JAVA package.
+[a] Setting up the JAVA JDK6 package:
+# alternatives --install /usr/bin/java java /usr/java/jdk1.6.0_35/jre/bin/java 20000
+# alternatives --install /usr/bin/jar jar /usr/java/jdk1.6.0_35/bin/jar 20000
+# alternatives --install /usr/bin/javac javac /usr/java/jdk1.6.0_35/bin/javac 20000
+# alternatives --install /usr/bin/javaws javaws /usr/java/jdk1.6.0_35/jre/bin/javaws 20000
+# alternatives --set java /usr/java/jdk1.6.0_35/jre/bin/java
+# alternatives --set javaws /usr/java/jdk1.6.0_35/jre/bin/javaws
+# alternatives --set javac /usr/java/jdk1.6.0_35/bin/javac
+# alternatives --set jar /usr/java/jdk1.6.0_35/bin/jar
+
+This set the default commands for JAVA JDK6 and listing the '/etc/alternatives/' directory showed the following:
+# ls -lA /etc/alternatives/
+--------------------------------------------------------------------------------------------------
+lrwxrwxrwx. 1 root root 29 Feb 22 03:39 jar -> /usr/java/jdk1.6.0_35/bin/jar
+lrwxrwxrwx. 1 root root 34 Feb 22 03:39 java -> /usr/java/jdk1.6.0_35/jre/bin/java
+lrwxrwxrwx. 1 root root 31 Feb 22 03:39 javac -> /usr/java/jdk1.6.0_35/bin/javac
+lrwxrwxrwx. 1 root root 36 Feb 22 03:39 javaws -> /usr/java/jdk1.6.0_35/jre/bin/javaws
+--------------------------------------------------------------------------------------------------
+
+[b] Setting up the JAVA JDK7 package:
+# alternatives --install /usr/bin/java java /usr/java/jdk1.7.0_15/jre/bin/java 20000
+# alternatives --install /usr/bin/jar jar /usr/java/jdk1.7.0_15/bin/jar 20000
+# alternatives --install /usr/bin/javac javac /usr/java/jdk1.7.0_15/bin/javac 20000
+# alternatives --install /usr/bin/javaws javaws /usr/java/jdk1.7.0_15/jre/bin/javaws 20000
+# alternatives --set java /usr/java/jdk1.7.0_15/jre/bin/java
+# alternatives --set javaws /usr/java/jdk1.7.0_15/jre/bin/javaws
+# alternatives --set javac /usr/java/jdk1.7.0_15/bin/javac
+# alternatives --set jar /usr/java/jdk1.7.0_15/bin/jar
+
+This set the default commands for JAVA JDK7 and listing the '/etc/alternatives/' directory showed the following:
+# ls -lA /etc/alternatives/
+--------------------------------------------------------------------------------------------------
+lrwxrwxrwx. 1 root root 29 Feb 22 03:39 jar -> /usr/java/jdk1.7.0_15/bin/jar
+lrwxrwxrwx. 1 root root 34 Feb 22 03:39 java -> /usr/java/jdk1.7.0_15/jre/bin/java
+lrwxrwxrwx. 1 root root 31 Feb 22 03:39 javac -> /usr/java/jdk1.7.0_15/bin/javac
+lrwxrwxrwx. 1 root root 36 Feb 22 03:39 javaws -> /usr/java/jdk1.7.0_15/jre/bin/javaws
+--------------------------------------------------------------------------------------------------
+
+
+Step 6. 
+Finally I verified the installed version of JAVA via:
+# java -version
+--------------------------------------------------------------------------------------------------
+java version "1.7.0_15"
+Java(TM) SE Runtime Environment (build 1.7.0_15-b03)
+Java HotSpot(TM) Client VM (build 23.7-b01, mixed mode, sharing)
+--------------------------------------------------------------------------------------------------
+
+
+
+
+Reference:
+https://d.stavrovski.net/blog/how-to-install-and-setup-oracle-java-jdk-in-centos-6/
+
+
+####################################################################################################################
+####################################################################################################################
+
+
+
+Method 2:
+=========
+
+
+
+Step 1:
+Downloading Java JDK/JRE 7 Binary:
+URL::	http://www.oracle.com/technetwork/java/javase/downloads/index.html
+
+For RHEL/CentOS/Fedora 32-bit OS:
+jdk-7u25-linux-i586.rpm
+jre-7u25-linux-i586.rpm
+
+For RHEL/CentOS/Fedora 64-bit OS:
+jdk-7u25-linux-x64.rpm
+jre-7u25-linux-x64.rpm
+
+
+Step 2:
+Install Java JDK/JRE 7u25:
+###### Install Java on 32-Bit OS ######
+# rpm -Uvh jdk-7u25-linux-i586.rpm
+# rpm -Uvh jre-7u25-linux-i586.rpm 
+
+###### Install Java on 64-Bit OS ######
+# rpm -Uvh jdk-7u25-linux-x64.rpm
+# rpm -Uvh jre-7u25-linux-x64.rpm
+
+
+Step 3:
+Check Java JDK/JRE 7u25:
+# java -version
+----------------------------------------------------------------------
+java version "1.7.0_25"
+Java(TM) SE Runtime Environment (build 1.7.0_25-b04)
+Java HotSpot(TM) 64-Bit Server VM (build 22.1-b02, mixed mode)
+----------------------------------------------------------------------
+
+# javac -version
+----------------------------------------------------------------------
+javac 1.7.0_25
+----------------------------------------------------------------------
+
+
+Step 4:
+Enable Java JDK /  JRE 7u25 Support in Firefox:
+###### For 32-Bit OS ######
+# alternatives --install /usr/lib/mozilla/plugins/libjavaplugin.so libjavaplugin.so /usr/java/jdk1.7.0_25/jre/lib/i386/libnpjp2.so 20000
+
+###### For 64-Bit OS ######
+# alternatives --install /usr/lib64/mozilla/plugins/libjavaplugin.so libjavaplugin.so.x86_64 /usr/java/jdk1.7.0_25/jre/lib/amd64/libnpjp2.so 20000
+
+
+Step 5:
+Verify it, by restarting Firefox and enter 'about:plugins' on the address bar.
+
+
+
+
+Reference:
+http://www.tecmint.com/install-jdk-jre-on-rhe-centos-6-5-and-fedora-17-12/
+
+
+

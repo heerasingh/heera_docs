@@ -1,0 +1,25 @@
+
+1. Check installed Java version:
+# java -version
+
+
+2. Check all installed Java packages and select default one:
+# update-alternatives --config java
+
+
+3. Create "plugin" directory into the given path:
+# mkdir /home/USERNAME/.mozilla/plugins
+# cd plugins
+
+
+4. Now create symbolic link of java module:
+# ln -s /usr/lib/jvm/java-7-oracle/jre/lib/i386/libnpjp2.so /home/USERNAME/.mozilla/plugins/
+
+
+5. Check java plugin on Firefox:
+Type "about:plugins" on address bar end enter.
+You will see java plugin is enabled.
+
+
+
+

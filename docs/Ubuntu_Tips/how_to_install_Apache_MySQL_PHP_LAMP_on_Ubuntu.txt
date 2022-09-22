@@ -1,0 +1,88 @@
+
+How to Install Linux, Apache, MySQL, PHP (LAMP) stack on Ubuntu:
+================================================================
+
+
+
+Step 1: 
+Install Apache
+$ sudo apt-get update
+$ sudo apt-get install apache2
+
+
+
+Step 2: 
+Install MySQL
+$ sudo apt-get install mysql-server libapache2-mod-auth-mysql php5-mysql
+
+During the installation, MySQL will ask you to set a root password. 
+If you miss the chance to set the password while the program is installing, 
+it is very easy to set the password later from within the MySQL shell.
+
+Once you have installed MySQL, we should activate it with this command:
+$ sudo mysql_install_db
+
+Finish up by running the MySQL set up script:
+$ sudo /usr/bin/mysql_secure_installation
+
+The prompt will ask you for your current root password. 
+Then the prompt will ask you if you want to change the root password. Go ahead and choose N and move on to the next steps. 
+It's easiest just to say Yes to all the options. At the end, MySQL will reload and implement the new changes.
+Once you're done with that you can finish up by installing PHP.
+
+
+
+Step 3: 
+Install PHP
+$ sudo apt-get install php5 libapache2-mod-php5 php5-mcrypt
+
+It may also be useful to add php to the directory index, to serve the relevant php index files:
+$ sudo vi /etc/apache2/mods-enabled/dir.conf
+
+Add index.php to the beginning of index files. The page should now look like this:
+----------------------------------------------------------------------------------------------------------
+<IfModule mod_dir.c>
+
+          DirectoryIndex index.php index.html index.cgi index.pl index.php index.xhtml index.htm
+
+</IfModule>
+----------------------------------------------------------------------------------------------------------
+
+PHP Modules:
+PHP also has a variety of useful libraries and modules that you can add onto your virtual server. You can see the libraries that are available.
+$ apt-cache search php5-
+Terminal will then display the list of possible modules.
+Once you decide to install the module, type:
+$ sudo apt-get install <Name of The Module>
+
+
+
+Step 4: 
+See PHP on your Server
+Although LAMP is installed, we can still take a look and see the components online by creating a quick php info page.
+To set this up, first create a new file:
+$sudo vi /var/www/info.php
+-----------------------------
+<?php
+phpinfo();
+?>
+-----------------------------
+
+
+
+Step 5: 
+Restart apache so that all of the changes take effect:
+$ sudo service apache2 restart
+
+
+
+
+
+
+
+
+Reference:
+https://www.digitalocean.com/community/articles/how-to-install-linux-apache-mysql-php-lamp-stack-on-ubuntu
+https://www.digitalocean.com/community/articles/a-basic-mysql-tutorial
+https://www.digitalocean.com/community/articles/how-to-install-and-secure-phpmyadmin-on-ubuntu-12-04
+https://www.digitalocean.com/community/articles/how-to-install-linux-nginx-mysql-php-lemp-stack-on-ubuntu-12-04

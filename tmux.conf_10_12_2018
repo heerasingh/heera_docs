@@ -1,0 +1,102 @@
+# Change prefix key to Ctrl+a
+unbind C-b
+set -g prefix C-a
+# Able to send prefix key
+bind a send-prefix
+
+#setw -g aggressive-resize on
+setw -g aggressive-resize on
+# Set to 1-based, easy to press with starting 1 than 0
+setw -g base-index 1
+
+# Last active window
+unbind l
+bind C-a last-window
+
+# Next window
+#bind C-s next-window
+
+# Copy mode
+unbind [
+bind Escape copy-mode
+# Use Vi mode
+setw -g mode-keys vi 
+
+# Set History limit
+set -g history-limit 10000
+
+# Turn off mode-mouse, it becomes very annoying.
+#setw -g mode-mouse copy-mode
+
+# More straight forward key bindings for splitting
+# Horizontal pane splitting
+unbind %
+bind C-h split-window -h
+
+# Vertical pane splitting
+unbind '"'
+bind C-v split-window -v
+
+# Set extra info
+#set -g status-right '#[fg=colour13,bold][#(date "+%T ")]#[fg=colour39][#(date "+%d/%m/%y")]#[fg=yellow][#(uptime | cut -d\: -f5)]'
+#set -g status-right "#[fg=colour13,bold][#(date '+%T')]#[fg=colour39][#(date '+%d/%m/%y')]#[fg=yellow][#(uptime | awk '{print $11,$12,$13}' )] "
+##set -g status-right "#[fg=colour13,bold][#(date '+%T')]#[fg=colour39][#(date '+%d/%m/%y')]#[fg=yellow][#(uptime | cut -d: -f5)]"
+#set -g status-right "#[fg=colour13,bold][#(date '+%T')]#[fg=colour39][#(date '+%d/%m/%y')]#[fg=yellow][#(uptime | awk '{print $09,$10,$11}' )] "
+set -g status-right "#[fg=colour13,bold][#(date '+%T')]#[fg=colour39][#(date '+%d/%m/%y')]#[fg=yellow][#(uptime | cut -d "," -f 3- | cut -d ":" -f 2- )] "
+
+# Set status bar
+set -g status-bg black
+set -g status-fg white
+#set -g status-left '#[fg=green]#H#(lsb_release -d | awk "{print $2,$3,$4}")'
+#set -g status-left '#[fg=red][#(whoami)]#[fg=green,bold][#(lsb_release -d | cut -f2 -d\:)]'
+set -g status-left '#[fg=green,bold][#(whoami)#\@#H]'
+
+# Set active window border to blue
+set-option -g pane-active-border-fg blue
+
+# Highlight active window
+set-window-option -g window-status-current-bg white
+set-window-option -g window-status-current-fg red
+
+
+# Automatically set window title
+setw -g automatic-rename
+
+# Status bar length
+set -g status-right-length 50
+
+# Notifying if other windows has activities
+setw -g monitor-activity on
+set -g visual-activity on
+
+# Clock
+setw -g clock-mode-colour colour250
+setw -g clock-mode-style 24
+
+# For copy paste with vim-like settings
+#unbind p
+#bind p paste-buffer
+##bind-key -t vi-copy 'v' begin-selection
+##bind-key -t vi-copy 'y' copy-selection
+
+# Sane scrolling
+set -g terminal-overrides 'xterm*:smcup@:rmcup@'
+
+##### Script too see all possible 256 colours #####
+
+#for i in {0..255} ; do
+#    printf "\x1b[38;5;${i}mcolour${i}\n"
+#done
+##set -g default-terminal 'screen-256color'
+set -g default-terminal 'xterm-256color'
+
+
+#set -g status-top-length 30
+#set -g status-top '#H'
+
+
+# use mouse
+#set-option -g mode-mouse on
+#set-option -g mouse-select-pane on
+#set-option -g mouse-resize-pane on
+
